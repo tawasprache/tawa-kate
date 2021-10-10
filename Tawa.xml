@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE xml
+
+[
+    <!ENTITY ident "[[:alpha:]]\w*">
+    <!ENTITY symbolString "&ident;(:&ident;)*">
+]>
+
+<language xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="language.xsd" name="Tawa" section="Sources" extensions="*.tawa" version="1" kateversion="5.0">
+    <highlighting>
+        <contexts>
+            <!-- Every file starts with a package declaration... -->
+            <context name="normal" attribute="Normal Text" lineEndContext="#stay">
+                <WordDetect String="paket" context="Package" />
+            </context>
+            <!-- The package declaration is an ident that then hops to what it's showing... -->
+            <context name="Package" attribute="Package Declaration" lineEndContext="#stay">
+                <RegExpr String="&ident;" attribute="Package Name" context="#pop!PackageShowing" />
+            </context>
+            <!-- The package showing identifies what's being show, then pops to imports... -->
+            <context name="PackageShowing" attribute="Package Showing" lineEndContext="#stay">
+                <WordDetect String="zeigt" attribute="Package Declaration" />
+                <WordDetect String="nichts" attribute="Package Declaration" context="#pop!Imports" />
+                <WordDetect String="alles" attribute="Package Declaration" context="#pop!Imports" />
+            </context>
+            <!-- We parse a bunch of import statements... -->
+            <context name="Imports" attribute="Imports" lineEndContext="#stay">
+                <WordDetect String="import" attribute="Keyword" context="ImportName" />
+            </context>
+            <context name="ImportName" attribute="" lineEndContext="#stay">
+                <RegExpr String="&symbolString;" attribute="PackageName" context="#pop!Import"/>
+            </context>
+            <context name="Import" attribute="Import" lineEndContext="#stay">
+                <!-- Maybe the package is aliased... -->
+                <WordDetect String="als" attribute="Keyword" context="ImportAls" />
+
+                <!-- Maybe we're showing something... -->
+                <WordDetect String="zeigende" attribute="Keyword" context="Showing" />
+            </context>
+            <context name="ImportAls" attribute="" lineEndContext="#stay">
+                <RegExpr String="&symbolString;" attribute="Package Name" context="#pop" />
+            </context>
+            <context name="Showing" attribute="" lineEndContext="#stay">
+                <!-- Maybe we're showing everything, in which case we pop twice back to the imports section -->
+                <WordDetect String="alles" attribute="Keyword" context="#pop#pop" />
+
+                <!-- Maybe we're showing a few things... -->
+                <DetectChar char="(" />
+                <!-- Return to the imports section... -->
+                <DetectChar char=")" context="#pop#pop" />
+            </context>
+        </contexts>
+        <itemDatas>
+            <itemData name="Normal Text" defStyleNum="dsNormal" />
+            <itemData name="Package Declaration" defStyleNum="dsKeyword" />
+            <itemData name="Package Name" defStyleNum="dsImport" />
+            <itemData name="Keyword" defStyleNum="dsKeyword" />
+        </itemDatas>
+    </highlighting>
+    <general>
+        <comments>
+            <comment name="singleLine" start="//" />
+            <comment name="multiLine" start="/*" end="*/" />
+        </comments>
+    </general>
+</language>
